@@ -17,6 +17,9 @@ implemented:
 
 - **Inventory foundation** — YAML-in-git system registry with Pydantic schema
   validation, pure query functions, and the `hag inventory` CLI.
+- **Governance dashboard** — six-page Streamlit app (portfolio overview, AI
+  systems browser, reviews due, risk distribution, compliance matrix, board
+  report preview) reading the inventory and artifacts live.
 
 ## Quickstart
 
@@ -37,6 +40,20 @@ hag inventory compliance
 
 Optional capabilities install as extras: `.[pdf]`, `.[dashboard]`, `.[fairness]`,
 `.[audit]`, `.[llm]`, or `.[all]`.
+
+## Dashboard
+
+```bash
+# Local (needs the dashboard extra)
+uv pip install -e ".[dashboard]"
+streamlit run src/healthcare_ai_governance/ui/dashboard.py
+
+# Or via Docker — pre-loaded with the Mountain Region Health demo
+docker compose up        # then open http://localhost:8501
+```
+
+`inventory/` and `artifacts/` are bind-mounted in Docker, so edits on the host
+appear in the dashboard without rebuilding.
 
 ## Configuration
 

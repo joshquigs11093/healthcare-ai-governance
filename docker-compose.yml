@@ -1,0 +1,23 @@
+# Run the governance dashboard, pre-loaded with the Mountain Region Health demo.
+#
+#   docker compose up
+#
+# Dashboard: http://localhost:8501
+#
+# inventory/ and artifacts/ are bind-mounted so they can be edited on the host
+# without rebuilding the image (.spec §11).
+
+services:
+  dashboard:
+    build: .
+    image: healthcare-ai-governance:latest
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./inventory:/app/inventory
+      - ./artifacts:/app/artifacts
+    environment:
+      INVENTORY_DIR: /app/inventory
+      ARTIFACTS_DIR: /app/artifacts
+      LOG_LEVEL: INFO
+    restart: unless-stopped
