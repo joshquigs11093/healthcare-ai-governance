@@ -69,6 +69,7 @@ module = [
     "weasyprint.*",
     "streamlit.*",
     "plotly.*",
+    "pandas.*",
     "fairlearn.*",
     "sklearn.*",
     "presidio_analyzer.*",

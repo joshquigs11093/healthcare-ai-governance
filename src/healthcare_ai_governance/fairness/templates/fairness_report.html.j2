@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fairness Report: {{ r.system_id }}</title>
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: #1a1a1a;
+         line-height: 1.5; max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+  h1 { color: #0b3d63; margin-bottom: 2px; }
+  h2 { color: #0b3d63; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; margin-top: 28px; }
+  .muted { color: #666; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 13px; }
+  th, td { border: 1px solid #d0d7de; padding: 6px 10px; text-align: left; }
+  th { background: #f6f8fa; }
+  .assess { background: #f0f4f8; border: 1px solid #d0d7de; border-radius: 4px;
+            padding: 10px 14px; margin: 10px 0; }
+  .sev-critical { color: #c62828; font-weight: bold; }
+  .sev-warning { color: #b58a00; font-weight: bold; }
+  code { background: #f6f8fa; padding: 1px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>AI Fairness &amp; Bias Report</h1>
+<p class="muted">System <code>{{ r.system_id }}</code> · evaluated {{ r.evaluation_date }}
+   · population {{ r.population_size }} · {{ r.slices_evaluated|length }} slices</p>
+
+<div class="assess"><strong>Overall assessment:</strong> {{ r.overall_assessment }}</div>
+
+<h2>Disparities flagged</h2>
+{% if r.disparities_flagged %}
+<table>
+  <tr><th>Slice</th><th>Metric</th><th>Groups (low → high)</th><th>Magnitude</th><th>95% CI</th><th>Severity</th></tr>
+  {% for f in r.disparities_flagged %}
+  <tr>
+    <td>{{ f.slice_name }}</td>
+    <td>{{ f.metric }}</td>
+    <td>{{ f.disparate_groups | join(" → ") }}</td>
+    <td>{{ "%.3f"|format(f.magnitude) }}</td>
+    <td>[{{ "%.3f"|format(f.confidence_interval[0]) }}, {{ "%.3f"|format(f.confidence_interval[1]) }}]</td>
+    <td class="sev-{{ f.severity }}">{{ badge[f.severity] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="muted">Thresholds: warning if |magnitude| &gt; 0.05, critical if &gt; 0.10.</p>
+{% else %}
+<p>No disparities above the warning threshold.</p>
+{% endif %}
+
+<h2>Metrics by slice</h2>
+{% for slice_name, metrics in r.metrics_by_slice.items() %}
+<h3>{{ slice_name }}</h3>
+<table>
+  <tr><th>Metric</th><th>Disparity magnitude (max − min)</th></tr>
+  {% for metric, value in metrics.items() %}
+  <tr><td>{{ metric }}</td><td>{{ "%.4f"|format(value) }}</td></tr>
+  {% endfor %}
+</table>
+{% endfor %}
+
+{% if roc_div or reliability_div %}
+<h2>Diagnostics by group</h2>
+{{ reliability_div | safe }}
+{{ roc_div | safe }}
+{% endif %}
+
+<h2>Plain-language summary</h2>
+<p>
+This report compares how the model performs for different groups of patients. A
+"disparity magnitude" is the gap between the best- and worst-served group for a
+given measure — larger gaps mean the model treats some groups less well than
+others. {{ r.overall_assessment }}
+</p>
+<p class="muted">
+Demographic parity compares how often each group receives a positive prediction.
+Equal opportunity compares the true-positive rate (catching real cases). Equalized
+odds also considers false alarms. PPV parity compares how often a positive
+prediction is correct. Calibration (Brier score) measures whether predicted
+probabilities match observed outcomes.
+</p>
+</body>
+</html>
