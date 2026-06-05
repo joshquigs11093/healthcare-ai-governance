@@ -51,12 +51,8 @@ def test_counts_and_summary(system_factory) -> None:
 
 def test_overdue_detection(system_factory) -> None:
     systems = [
-        system_factory(
-            id="late", lifecycle_stage="production", next_review_due=date(2026, 1, 1)
-        ),
-        system_factory(
-            id="ok", lifecycle_stage="production", next_review_due=date(2027, 1, 1)
-        ),
+        system_factory(id="late", lifecycle_stage="production", next_review_due=date(2026, 1, 1)),
+        system_factory(id="ok", lifecycle_stage="production", next_review_due=date(2027, 1, 1)),
     ]
     data = _build(systems)
     assert data.overdue_count == 1

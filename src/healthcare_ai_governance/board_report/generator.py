@@ -57,9 +57,7 @@ class BoardReportData:
         )
 
 
-def _recommendations(
-    systems: list[AISystem], overdue: list[AISystem], as_of: date
-) -> list[str]:
+def _recommendations(systems: list[AISystem], overdue: list[AISystem], as_of: date) -> list[str]:
     """Deterministic, prioritized recommendations from the portfolio state."""
     recs: list[str] = []
     if overdue:

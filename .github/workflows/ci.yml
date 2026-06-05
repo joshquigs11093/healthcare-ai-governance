@@ -42,3 +42,10 @@ jobs:
 
       - name: Seed script dry-run
         run: python scripts/seed_demo_data.py --dry-run
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image (smoke test, not pushed)
+        run: docker build -t healthcare-ai-governance:ci .
