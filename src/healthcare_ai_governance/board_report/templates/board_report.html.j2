@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Governance Board Report — {{ d.organization }}</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 1.8cm 1.6cm 2.2cm 1.6cm;
+    @bottom-left { content: "{{ classification }}"; font-size: 7.5pt; color: #777; }
+    @bottom-center { content: "Generated {{ d.generation_date }}"; font-size: 7.5pt; color: #777; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 7.5pt; color: #777; }
+  }
+  body { font-family: "DejaVu Sans", Helvetica, Arial, sans-serif; font-size: 10.5pt;
+         color: #1a1a1a; line-height: 1.45; }
+  h1 { font-size: 20pt; margin: 0 0 2px 0; color: #0b3d63; }
+  h2 { font-size: 13pt; margin: 18px 0 6px 0; color: #0b3d63;
+       border-bottom: 1px solid #d0d7de; padding-bottom: 3px; }
+  .sub { color: #555; font-size: 9.5pt; margin-bottom: 12px; }
+  .summary { background: #f0f4f8; border: 1px solid #d0d7de; border-radius: 4px;
+             padding: 10px 14px; margin: 8px 0 14px; }
+  .stats { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+  .stats td { border: 1px solid #d0d7de; padding: 8px 10px; text-align: center; }
+  .stats .n { font-size: 18pt; font-weight: bold; color: #0b3d63; }
+  .stats .l { font-size: 8.5pt; color: #555; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; }
+  th, td { border: 1px solid #d0d7de; padding: 4px 8px; text-align: left; }
+  th { background: #f6f8fa; }
+  ul { margin: 4px 0 10px; padding-left: 20px; }
+  .tier-critical { color: #c62828; font-weight: bold; }
+  .tier-high { color: #ef6c00; font-weight: bold; }
+  .muted { color: #666; }
+</style>
+</head>
+<body>
+<h1>AI Governance Board Report</h1>
+<div class="sub">{{ d.organization }} &nbsp;·&nbsp; reporting period
+  {{ d.period_start }} to {{ d.period_end }} &nbsp;·&nbsp; generated {{ d.generation_date }}</div>
+
+<h2>Executive summary</h2>
+<div class="summary">{{ d.executive_summary }}</div>
+
+<h2>Portfolio statistics</h2>
+<table class="stats">
+  <tr>
+    <td><div class="n">{{ d.total_systems }}</div><div class="l">Total systems</div></td>
+    <td><div class="n">{{ d.production_count }}</div><div class="l">In production</div></td>
+    <td><div class="n">{{ d.high_critical_count }}</div><div class="l">High / critical</div></td>
+    <td><div class="n">{{ d.overdue_count }}</div><div class="l">Overdue reviews</div></td>
+  </tr>
+</table>
+<table>
+  <tr><th>Risk tier</th>{% for tier, n in d.by_tier.items() %}<th>{{ tier }}</th>{% endfor %}</tr>
+  <tr><td>Count</td>{% for tier, n in d.by_tier.items() %}<td>{{ n }}</td>{% endfor %}</tr>
+</table>
+
+<h2>Risk highlights</h2>
+{% if d.elevated_systems %}
+<table>
+  <tr><th>System</th><th>Risk</th><th>Lifecycle</th><th>Clinical</th></tr>
+  {% for s in d.elevated_systems %}
+  <tr>
+    <td>{{ s.name }}</td>
+    <td class="tier-{{ s.risk_tier }}">{{ s.risk_tier }}</td>
+    <td>{{ s.lifecycle_stage }}</td>
+    <td>{{ "yes" if s.affects_clinical_decision else "no" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No high- or critical-risk systems this period.</p>
+{% endif %}
+
+<h2>Overdue reviews</h2>
+{% if d.overdue_systems %}
+<table>
+  <tr><th>System</th><th>Risk</th><th>Was due</th></tr>
+  {% for s in d.overdue_systems %}
+  <tr><td>{{ s.name }}</td><td>{{ s.risk_tier }}</td><td>{{ s.next_review_due }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No systems overdue for review.</p>
+{% endif %}
+
+<h2>Governance activity</h2>
+{% if d.activity %}
+<ul>
+  {% for e in d.activity %}
+  <li>{{ e.timestamp[:10] }} — {{ e.subject }} <span class="muted">({{ e.author }})</span></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No version-control activity recorded for the inventory.</p>
+{% endif %}
+
+<h2>Recommendations</h2>
+<ul>
+  {% for r in d.recommendations %}
+  <li>{{ r }}</li>
+  {% endfor %}
+</ul>
+
+<p class="muted" style="margin-top:18px;border-top:1px solid #d0d7de;padding-top:6px;">
+This report is generated from the AI system inventory at a point in time. It is
+for internal governance use and does not constitute legal or compliance advice.
+</p>
+</body>
+</html>

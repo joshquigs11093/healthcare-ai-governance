@@ -1,22 +1,16 @@
-"""Board Report — executive summary page (.spec §6.6).
-
-This page renders the on-screen board report preview. PDF export is implemented
-by the board_report generator in milestone M9; until then the page surfaces the
-same content it will render to PDF and notes that export is pending.
-"""
+"""Board Report — executive PDF generation page (.spec §6.6)."""
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import streamlit as st
 
-from healthcare_ai_governance.dashboard_support import git_activity
-from healthcare_ai_governance.inventory.queries import (
-    lifecycle_distribution,
-    systems_by_risk_tier,
-    systems_overdue_for_review,
+from healthcare_ai_governance.board_report.generator import (
+    build_board_report_data,
+    generate_board_report_pdf,
 )
+from healthcare_ai_governance.shared.pdf import PDFUnavailableError, pdf_available
 from healthcare_ai_governance.ui.context import DashboardContext
 
 
@@ -27,53 +21,69 @@ def render(ctx: DashboardContext) -> None:
     start = col1.date_input("From", value=default_start)
     end = col2.date_input("To", value=ctx.today)
 
+    data = build_board_report_data(
+        ctx.systems,
+        ctx.organization,
+        period_start=start,
+        period_end=end,
+        generation_date=ctx.today,
+        repo_root=ctx.repo_root,
+    )
+
     st.divider()
     st.header(f"{ctx.organization.name} — AI Governance Report")
     st.caption(f"Reporting period: {start} to {end}")
 
-    systems = ctx.systems
-    by_tier = systems_by_risk_tier(systems)
-    by_stage = lifecycle_distribution(systems)
-    overdue = systems_overdue_for_review(systems, ctx.today)
-
     st.subheader("Executive summary")
-    st.markdown(
-        f"""
-The portfolio comprises **{len(systems)} AI systems**, of which
-**{by_stage.get("production", 0)}** are in production. There are
-**{len(by_tier["high"]) + len(by_tier["critical"])}** high- or critical-risk
-systems and **{len(overdue)}** overdue for review.
-"""
-    )
+    st.markdown(data.executive_summary)
 
     st.subheader("Portfolio statistics")
-    s1, s2, s3 = st.columns(3)
-    s1.metric("Total systems", len(systems))
-    s2.metric("High / critical", len(by_tier["high"]) + len(by_tier["critical"]))
-    s3.metric("Overdue reviews", len(overdue))
+    s1, s2, s3, s4 = st.columns(4)
+    s1.metric("Total systems", data.total_systems)
+    s2.metric("In production", data.production_count)
+    s3.metric("High / critical", data.high_critical_count)
+    s4.metric("Overdue reviews", data.overdue_count)
 
     st.subheader("Risk highlights")
-    elevated = by_tier["critical"] + by_tier["high"]
-    if elevated:
-        for s in elevated:
+    if data.elevated_systems:
+        for s in data.elevated_systems:
             st.markdown(f"- **{s.name}** — {s.risk_tier}, {s.lifecycle_stage}")
     else:
         st.markdown("- No elevated-risk systems this period.")
 
     st.subheader("Overdue items")
-    if overdue:
-        for s in overdue:
+    if data.overdue_systems:
+        for s in data.overdue_systems:
             st.markdown(f"- **{s.name}** — was due {s.next_review_due}")
     else:
         st.markdown("- None.")
 
-    st.subheader("Governance activity")
-    activity = git_activity(ctx.repo_root, n=10, path="inventory")
-    if activity:
-        for e in activity:
-            st.markdown(f"- {e.timestamp[:10]} — {e.subject} ({e.author})")
-    else:
-        st.markdown("- No version-control activity recorded.")
+    st.subheader("Recommendations")
+    for r in data.recommendations:
+        st.markdown(f"- {r}")
 
     st.divider()
-    st.info("PDF export of this report is delivered in milestone M9 (board_report generator).")
+    if not pdf_available():
+        st.info("WeasyPrint not installed; PDF export is available in the Docker image.")
+        return
+
+    if st.button("Generate board report PDF", type="primary"):
+        out_dir = ctx.settings.artifacts_dir / "board_reports"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")  # noqa: DTZ005 - local stamp
+        pdf_path = out_dir / f"board-report-{stamp}.pdf"
+        try:
+            generate_board_report_pdf(
+                data, pdf_path, classification_label=ctx.settings.pdf_classification_label
+            )
+        except PDFUnavailableError as exc:
+            st.error(f"PDF unavailable: {exc}")
+            return
+        with pdf_path.open("rb") as fh:
+            st.download_button(
+                "Download board report PDF",
+                fh.read(),
+                file_name=pdf_path.name,
+                mime="application/pdf",
+                type="primary",
+            )
