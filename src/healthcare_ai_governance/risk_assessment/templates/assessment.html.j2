@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Risk Assessment: {{ a.system_id }}</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 1.7cm 1.4cm 2.2cm 1.4cm;
+    @bottom-left { content: "{{ classification }}"; font-size: 7.5pt; color: #777; }
+    @bottom-center { content: "{{ generation_date }} · sig {{ short_hash }}"; font-size: 7.5pt; color: #777; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 7.5pt; color: #777; }
+  }
+  body { font-family: "DejaVu Sans", Helvetica, Arial, sans-serif; font-size: 10.5pt;
+         color: #1a1a1a; line-height: 1.45; }
+  h1 { font-size: 19pt; margin: 0 0 2px 0; color: #0b3d63; }
+  h2 { font-size: 13pt; margin: 18px 0 6px 0; color: #0b3d63;
+       border-bottom: 1px solid #d0d7de; padding-bottom: 3px; }
+  .banner { background: #f0f4f8; border: 1px solid #d0d7de; border-radius: 4px;
+            padding: 8px 12px; font-size: 9pt; color: #444; margin: 8px 0 14px 0; }
+  .tier { display: inline-block; padding: 2px 10px; border-radius: 10px; font-weight: bold;
+          color: #fff; }
+  .tier-low { background: #2e7d32; } .tier-medium { background: #b58a00; }
+  .tier-high { background: #ef6c00; } .tier-critical { background: #c62828; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #d0d7de; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  ul { margin: 4px 0 10px 0; padding-left: 20px; }
+  .muted { color: #666; font-size: 8.5pt; }
+  .footer-hash { margin-top: 18px; border-top: 1px solid #d0d7de; padding-top: 6px; }
+</style>
+</head>
+<body>
+<h1>AI Risk Assessment</h1>
+<div class="banner">
+  <span style="font-weight:bold;color:#0b3d63;">{{ classification }}</span> &nbsp;·&nbsp;
+  System <code>{{ a.system_id }}</code> &nbsp;·&nbsp; {{ a.assessment_date }}
+  &nbsp;·&nbsp; Generated {{ generation_date }}
+</div>
+
+<h2>Summary</h2>
+<table>
+  <tr><th style="width:30%;">System</th><td>{{ a.system_id }}</td></tr>
+  <tr><th>Computed risk tier</th>
+      <td><span class="tier tier-{{ a.computed_risk_tier }}">{{ a.computed_risk_tier|upper }}</span></td></tr>
+  <tr><th>Generative system</th><td>{{ "yes" if a.is_generative else "no" }}</td></tr>
+  <tr><th>Assessor</th><td>{{ a.assessor_name }} — {{ a.assessor_role }}</td></tr>
+  <tr><th>Assessment date</th><td>{{ a.assessment_date }}</td></tr>
+</table>
+
+<h2>Risk register</h2>
+{% if a.risk_register %}
+<table>
+  <tr><th>Risk</th><th>Likelihood</th><th>Severity</th><th>Score</th><th>NIST</th></tr>
+  {% for item in a.risk_register %}
+  <tr>
+    <td>{{ item.description }}</td>
+    <td>{{ item.likelihood }}</td>
+    <td>{{ item.severity }}</td>
+    <td>{{ item.inherent_risk_score }}</td>
+    <td>{{ item.nist_rmf_subcategory }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No elevated risks identified from the responses.</p>
+{% endif %}
+
+<h2>Recommended mitigations</h2>
+{% if a.recommended_mitigations %}
+<ul>{% for m in a.recommended_mitigations %}<li>{{ m }}</li>{% endfor %}</ul>
+{% else %}
+<p class="muted">No specific mitigations triggered.</p>
+{% endif %}
+
+<h2>Responses</h2>
+<table>
+  <tr><th style="width:35%;">Question</th><th>Response</th></tr>
+  {% for qid, value in a.responses.items() %}
+  <tr><td><code>{{ qid }}</code></td>
+      <td>{% if value is iterable and value is not string %}{{ value|join(", ") }}{% else %}{{ value }}{% endif %}</td></tr>
+  {% endfor %}
+</table>
+
+<div class="footer-hash muted">
+  Content signature (SHA-256): <code>{{ full_hash }}</code><br>
+  This hash detects tampering with the assessment content. It is not a
+  cryptographic signature and does not authenticate the assessor.
+</div>
+</body>
+</html>

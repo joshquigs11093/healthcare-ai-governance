@@ -1,0 +1,434 @@
+# Risk assessment questionnaire (.spec §6.3).
+#
+# This file is DATA, not code, so it can be reviewed and amended by non-developers
+# (clinical safety officers, compliance, governance committee members).
+#
+# SCORING CONVENTION (see risk_assessment/scoring.py):
+#   - Options for `select` are listed in INCREASING order of risk. The score is
+#     the 0-based position of the chosen option; max is (len(options) - 1).
+#   - `yes_no` questions are phrased so that "yes" is the riskier answer:
+#     yes = 1, no = 0.
+#   - `scale_1_5`: the chosen number is the score (1..5); max is 5.
+#   - `multiselect`: score is the number of options selected; max is len(options).
+#   - `text`: not scored (qualitative context only).
+#   - `weight` (1..5) multiplies a question's contribution to the weighted total.
+#   - `tier_overrides` map a specific response to a MINIMUM risk tier (hard floor)
+#     regardless of the weighted score.
+#   - `generative_only: true` questions activate only when the screening question
+#     `model.is_generative` is answered "yes" (NIST AI 600-1 Generative Profile).
+#
+# Each question cites the NIST AI RMF subcategory it primarily supports.
+
+questions:
+  # ---- Use case (MAP) ----
+  - id: use_case.clinical_impact
+    category: use_case
+    nist_rmf_subcategory: "MAP 1.1"
+    text: "What is the system's impact on clinical care?"
+    help_text: "How directly do the system's outputs affect patient care decisions?"
+    response_type: select
+    options:
+      - "administrative or operational only"
+      - "informational to clinicians"
+      - "influences clinical decisions"
+      - "directs clinical decisions"
+    weight: 5
+    tier_overrides:
+      "directs clinical decisions": high
+
+  - id: use_case.autonomy
+    category: use_case
+    nist_rmf_subcategory: "MANAGE 1.3"
+    text: "Does the system make autonomous clinical decisions without human review?"
+    help_text: "A 'yes' means the output can act on a patient without a clinician in the loop."
+    response_type: yes_no
+    weight: 5
+    tier_overrides:
+      "yes": critical
+
+  - id: use_case.patient_safety
+    category: use_case
+    nist_rmf_subcategory: "MAP 1.1"
+    text: "Could an incorrect output plausibly contribute to patient harm?"
+    help_text: "Consider missed diagnoses, inappropriate treatment, or delayed care."
+    response_type: select
+    options:
+      - "no realistic safety impact"
+      - "minor or easily caught"
+      - "moderate, mitigated by workflow"
+      - "serious potential for harm"
+    weight: 5
+
+  - id: use_case.population_scope
+    category: use_case
+    nist_rmf_subcategory: "MAP 1.6"
+    text: "How large is the affected patient population?"
+    help_text: "Breadth of exposure if the system misbehaves."
+    response_type: select
+    options:
+      - "a single unit or pilot cohort"
+      - "a service line"
+      - "a facility"
+      - "the entire health system"
+    weight: 3
+
+  - id: use_case.reversibility
+    category: use_case
+    nist_rmf_subcategory: "MAP 5.1"
+    text: "How reversible are actions taken on the basis of the system's output?"
+    help_text: "Can a wrong output be caught and undone before it affects the patient?"
+    response_type: select
+    options:
+      - "fully reversible"
+      - "reversible with effort"
+      - "difficult to reverse"
+      - "irreversible"
+    weight: 4
+
+  - id: use_case.novelty
+    category: use_case
+    nist_rmf_subcategory: "MAP 1.5"
+    text: "How novel is this use of AI in your organization?"
+    help_text: "Novel uses carry more unknown-unknowns."
+    response_type: scale_1_5
+    weight: 2
+
+  # ---- Data (MAP / MEASURE) ----
+  - id: data.phi
+    category: data
+    nist_rmf_subcategory: "MAP 4.1"
+    text: "What category of patient data does the system process?"
+    help_text: "Protected health information raises privacy and security stakes."
+    response_type: select
+    options:
+      - "no patient data"
+      - "de-identified data"
+      - "limited data set"
+      - "fully identified PHI"
+    weight: 4
+
+  - id: data.quality
+    category: data
+    nist_rmf_subcategory: "MEASURE 2.8"
+    text: "How well-characterized is the quality of the input data?"
+    help_text: "Missingness, errors, and label noise degrade safety."
+    response_type: select
+    options:
+      - "rigorously validated"
+      - "generally good, some gaps"
+      - "known quality issues"
+      - "largely uncharacterized"
+    weight: 3
+
+  - id: data.representativeness
+    category: data
+    nist_rmf_subcategory: "MEASURE 2.11"
+    text: "Does the training data represent the deployment population?"
+    help_text: "Distribution shift between training and deployment harms validity and equity."
+    response_type: select
+    options:
+      - "validated as representative"
+      - "mostly representative"
+      - "partially representative"
+      - "unknown or unrepresentative"
+    weight: 4
+
+  - id: data.provenance
+    category: data
+    nist_rmf_subcategory: "MAP 4.2"
+    text: "Is the provenance and lawful basis of the data documented?"
+    help_text: "Source, consent, and permitted uses."
+    response_type: yes_no
+    weight: 2
+
+  - id: data.drift
+    category: data
+    nist_rmf_subcategory: "MEASURE 2.4"
+    text: "How exposed is the system to data/concept drift over time?"
+    help_text: "Care patterns, coding, and populations change."
+    response_type: scale_1_5
+    weight: 3
+
+  - id: data.linkage
+    category: data
+    nist_rmf_subcategory: "MAP 4.1"
+    text: "Does the system link records across sources in ways that increase re-identification risk?"
+    help_text: "Linkage can re-identify otherwise de-identified data."
+    response_type: yes_no
+    weight: 2
+
+  # ---- Model (MEASURE) ----
+  - id: model.is_generative
+    category: model
+    nist_rmf_subcategory: "MAP 1.1"
+    text: "Is this a generative AI system (produces free-text, images, or code)?"
+    help_text: "Answering 'yes' activates the Generative AI Profile (NIST AI 600-1) questions."
+    response_type: yes_no
+    weight: 1
+
+  - id: model.explainability
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.9"
+    text: "How interpretable is the model to its users?"
+    help_text: "Can clinicians understand why an output was produced?"
+    response_type: select
+    options:
+      - "fully interpretable (e.g. linear, rules)"
+      - "interpretable with tooling"
+      - "partially interpretable"
+      - "opaque / black box"
+    weight: 3
+
+  - id: model.validation
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.5"
+    text: "What level of validation has the model undergone?"
+    help_text: "Internal, external, prospective, or none."
+    response_type: select
+    options:
+      - "prospective external validation"
+      - "retrospective external validation"
+      - "internal validation only"
+      - "not yet validated"
+    weight: 5
+
+  - id: model.performance
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.3"
+    text: "Is measured performance adequate for the intended use?"
+    help_text: "Discrimination, calibration, and clinically meaningful thresholds."
+    response_type: select
+    options:
+      - "strong and clinically validated"
+      - "adequate"
+      - "marginal"
+      - "unknown or inadequate"
+    weight: 4
+
+  - id: model.robustness
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.7"
+    text: "How robust is the model to out-of-distribution or adversarial inputs?"
+    help_text: "Behavior on edge cases and unexpected inputs."
+    response_type: scale_1_5
+    weight: 3
+
+  - id: model.uncertainty
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.9"
+    text: "Does the system communicate uncertainty in its outputs?"
+    help_text: "Calibrated confidence helps users weigh outputs appropriately."
+    response_type: yes_no
+    weight: 2
+
+  - id: model.third_party
+    category: model
+    nist_rmf_subcategory: "GOVERN 6.1"
+    text: "Is the model supplied or hosted by a third party?"
+    help_text: "Vendor models add supply-chain and transparency risk."
+    response_type: yes_no
+    weight: 2
+
+  # ---- Deployment (MANAGE) ----
+  - id: deployment.ehr_integration
+    category: deployment
+    nist_rmf_subcategory: "MANAGE 1.2"
+    text: "How deeply is the system integrated into the clinical workflow?"
+    help_text: "Tighter integration increases reach and automation bias."
+    response_type: select
+    options:
+      - "standalone / advisory"
+      - "surfaced in the EHR"
+      - "embedded in order workflows"
+      - "drives automated actions"
+    weight: 4
+
+  - id: deployment.human_oversight
+    category: deployment
+    nist_rmf_subcategory: "MANAGE 1.3"
+    text: "What level of human oversight applies at the point of use?"
+    help_text: "Human-in-the-loop vs. human-on-the-loop vs. none."
+    response_type: select
+    options:
+      - "human approves every action"
+      - "human reviews exceptions"
+      - "human monitors in aggregate"
+      - "no human oversight"
+    weight: 5
+    tier_overrides:
+      "no human oversight": high
+
+  - id: deployment.scale
+    category: deployment
+    nist_rmf_subcategory: "MANAGE 2.1"
+    text: "At what volume does the system operate?"
+    help_text: "High throughput amplifies the impact of systematic errors."
+    response_type: scale_1_5
+    weight: 2
+
+  - id: deployment.monitoring
+    category: deployment
+    nist_rmf_subcategory: "MEASURE 2.12"
+    text: "Is there a production monitoring plan for performance and safety?"
+    help_text: "Ongoing monitoring detects drift and failures."
+    response_type: yes_no
+    weight: 3
+
+  - id: deployment.rollback
+    category: deployment
+    nist_rmf_subcategory: "MANAGE 4.1"
+    text: "Is there a tested rollback / shutoff procedure?"
+    help_text: "Can the system be safely disabled if it misbehaves?"
+    response_type: yes_no
+    weight: 3
+
+  - id: deployment.access_control
+    category: deployment
+    nist_rmf_subcategory: "GOVERN 1.5"
+    text: "Are access controls and audit logging in place for the system?"
+    help_text: "Who can use it, change it, and is that recorded?"
+    response_type: yes_no
+    weight: 2
+
+  # ---- Oversight (GOVERN) ----
+  - id: oversight.governance_approval
+    category: oversight
+    nist_rmf_subcategory: "GOVERN 1.1"
+    text: "Has the system been approved through your AI governance process?"
+    help_text: "Formal review and sign-off before deployment."
+    response_type: yes_no
+    weight: 3
+
+  - id: oversight.accountable_owner
+    category: oversight
+    nist_rmf_subcategory: "GOVERN 2.1"
+    text: "Is there a named accountable owner for the system?"
+    help_text: "A single accountable person, not just a team."
+    response_type: yes_no
+    weight: 2
+
+  - id: oversight.incident_response
+    category: oversight
+    nist_rmf_subcategory: "MANAGE 4.3"
+    text: "Is there an incident response plan specific to this system?"
+    help_text: "Who does what when the system causes or risks harm."
+    response_type: yes_no
+    weight: 3
+
+  - id: oversight.review_cadence
+    category: oversight
+    nist_rmf_subcategory: "MANAGE 4.1"
+    text: "How frequently is the system formally reviewed post-deployment?"
+    help_text: "Less frequent review means slower detection of problems."
+    response_type: select
+    options:
+      - "quarterly or more often"
+      - "twice yearly"
+      - "annually"
+      - "no scheduled review"
+    weight: 3
+
+  - id: oversight.user_training
+    category: oversight
+    nist_rmf_subcategory: "GOVERN 4.2"
+    text: "Are end users trained on the system's appropriate use and limits?"
+    help_text: "Untrained users misuse or over-trust outputs."
+    response_type: yes_no
+    weight: 2
+
+  # ---- Ethics & equity (GOVERN / MEASURE) ----
+  - id: ethics_equity.fairness_testing
+    category: ethics_equity
+    nist_rmf_subcategory: "MEASURE 2.11"
+    text: "Has the system been tested for fairness across demographic subgroups?"
+    help_text: "Disparate performance can entrench inequity."
+    response_type: select
+    options:
+      - "tested, no material disparities"
+      - "tested, disparities mitigated"
+      - "tested, disparities unresolved"
+      - "not tested"
+    weight: 4
+
+  - id: ethics_equity.subgroup_performance
+    category: ethics_equity
+    nist_rmf_subcategory: "MEASURE 2.11"
+    text: "Is performance acceptable across all relevant subgroups?"
+    help_text: "Aggregate performance can hide subgroup failures."
+    response_type: select
+    options:
+      - "yes, validated"
+      - "mostly, minor gaps"
+      - "material gaps exist"
+      - "unknown"
+    weight: 4
+
+  - id: ethics_equity.bias_mitigation
+    category: ethics_equity
+    nist_rmf_subcategory: "MANAGE 2.3"
+    text: "Are bias mitigation measures documented and in place?"
+    help_text: "Pre-, in-, or post-processing mitigations and monitoring."
+    response_type: yes_no
+    weight: 3
+
+  - id: ethics_equity.patient_transparency
+    category: ethics_equity
+    nist_rmf_subcategory: "GOVERN 5.1"
+    text: "Are patients informed that AI is involved in their care, where appropriate?"
+    help_text: "Transparency and, where required, the ability to opt out."
+    response_type: yes_no
+    weight: 2
+
+  - id: ethics_equity.equity_impact
+    category: ethics_equity
+    nist_rmf_subcategory: "MAP 1.6"
+    text: "Could the system widen health disparities if it underperforms for some groups?"
+    help_text: "Consider access, allocation, and historical bias in the data."
+    response_type: scale_1_5
+    weight: 3
+
+  # ---- Generative AI Profile (NIST AI 600-1), activated when model.is_generative = yes ----
+  - id: gen.hallucination
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.3 (GAI)"
+    text: "How significant is the risk of fabricated or unsupported outputs (hallucination)?"
+    help_text: "Generative systems can produce confident, incorrect statements."
+    response_type: scale_1_5
+    weight: 4
+    generative_only: true
+
+  - id: gen.phi_leakage
+    category: data
+    nist_rmf_subcategory: "MAP 4.1 (GAI)"
+    text: "Could generated outputs leak PHI or training data?"
+    help_text: "Memorization and prompt injection can surface sensitive data."
+    response_type: yes_no
+    weight: 4
+    generative_only: true
+
+  - id: gen.misuse
+    category: deployment
+    nist_rmf_subcategory: "MANAGE 2.2 (GAI)"
+    text: "How exposed is the system to misuse, jailbreaks, or prompt injection?"
+    help_text: "Adversarial users may bypass safety constraints."
+    response_type: scale_1_5
+    weight: 3
+    generative_only: true
+
+  - id: gen.grounding
+    category: model
+    nist_rmf_subcategory: "MEASURE 2.9 (GAI)"
+    text: "Are generated claims grounded in and cited to verifiable sources?"
+    help_text: "Retrieval grounding and citation reduce unsupported claims."
+    response_type: yes_no
+    weight: 3
+    generative_only: true
+
+  - id: gen.content_provenance
+    category: oversight
+    nist_rmf_subcategory: "GOVERN 1.2 (GAI)"
+    text: "Is AI-generated content labeled/traceable as such where it matters?"
+    help_text: "Provenance prevents generated content being mistaken for human-authored."
+    response_type: yes_no
+    weight: 2
+    generative_only: true

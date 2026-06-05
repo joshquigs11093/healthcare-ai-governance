@@ -16,6 +16,7 @@ pytest.importorskip("streamlit")
 _MODULES = [
     "healthcare_ai_governance.ui.context",
     "healthcare_ai_governance.ui.dashboard",
+    "healthcare_ai_governance.ui.risk_assessment_app",
     "healthcare_ai_governance.ui.components.portfolio_overview",
     "healthcare_ai_governance.ui.components.system_detail",
     "healthcare_ai_governance.ui.components.reviews_due",

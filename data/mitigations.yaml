@@ -1,0 +1,118 @@
+# Risk mitigation rules (.spec §6.3).
+#
+# Each rule maps a risk pattern (a combination of questionnaire responses, and/or
+# a minimum computed tier) to a recommended mitigation tagged with the NIST AI
+# RMF subcategory it addresses. Reviewable by non-developers.
+#
+# A rule fires when:
+#   - every entry under `when.responses` matches (the response equals the listed
+#     value, or is one of the listed values), AND
+#   - if `when.min_tier` is set, the computed tier is at least that tier.
+# A rule with only `when.min_tier` fires on tier alone.
+
+mitigations:
+  - id: escalate_high_risk
+    when:
+      min_tier: high
+    mitigation: "Escalate to the AI governance committee for formal review and sign-off before deployment."
+    nist_rmf_subcategory: "GOVERN 1.1"
+
+  - id: human_in_the_loop
+    when:
+      responses:
+        deployment.human_oversight:
+          - "human monitors in aggregate"
+          - "no human oversight"
+    mitigation: "Introduce human-in-the-loop review of high-impact outputs before any action is taken."
+    nist_rmf_subcategory: "MANAGE 1.3"
+
+  - id: autonomy_guardrails
+    when:
+      responses:
+        use_case.autonomy: "yes"
+    mitigation: "Require clinician confirmation for autonomous clinical actions, or restrict to non-clinical decisions until validated."
+    nist_rmf_subcategory: "MANAGE 1.3"
+
+  - id: fairness_evaluation
+    when:
+      responses:
+        ethics_equity.fairness_testing:
+          - "tested, disparities unresolved"
+          - "not tested"
+    mitigation: "Conduct a subgroup fairness evaluation and remediate material disparities before broad rollout."
+    nist_rmf_subcategory: "MEASURE 2.11"
+
+  - id: subgroup_gaps
+    when:
+      responses:
+        ethics_equity.subgroup_performance:
+          - "material gaps exist"
+          - "unknown"
+    mitigation: "Characterize and close subgroup performance gaps; document residual limitations in the model card."
+    nist_rmf_subcategory: "MEASURE 2.11"
+
+  - id: external_validation
+    when:
+      responses:
+        model.validation:
+          - "internal validation only"
+          - "not yet validated"
+    mitigation: "Perform external (and ideally prospective) validation on the deployment population before clinical use."
+    nist_rmf_subcategory: "MEASURE 2.5"
+
+  - id: monitoring_plan
+    when:
+      responses:
+        deployment.monitoring: "no"
+    mitigation: "Establish a production monitoring plan covering performance, calibration drift, and safety signals."
+    nist_rmf_subcategory: "MEASURE 2.12"
+
+  - id: rollback_procedure
+    when:
+      responses:
+        deployment.rollback: "no"
+    mitigation: "Define and test a rollback/shutoff procedure so the system can be safely disabled."
+    nist_rmf_subcategory: "MANAGE 4.1"
+
+  - id: incident_response
+    when:
+      responses:
+        oversight.incident_response: "no"
+    mitigation: "Author a system-specific incident response plan with clear roles and escalation paths."
+    nist_rmf_subcategory: "MANAGE 4.3"
+
+  - id: phi_safeguards
+    when:
+      responses:
+        data.phi: "fully identified PHI"
+    mitigation: "Apply minimum-necessary access, encryption, and audit logging for identified PHI; complete a privacy review."
+    nist_rmf_subcategory: "MAP 4.1"
+
+  - id: explainability
+    when:
+      responses:
+        model.explainability: "opaque / black box"
+    mitigation: "Provide post-hoc explanations or surrogate interpretability tooling so clinicians can appropriately weigh outputs."
+    nist_rmf_subcategory: "MEASURE 2.9"
+
+  - id: vendor_transparency
+    when:
+      responses:
+        model.third_party: "yes"
+    mitigation: "Obtain a vendor model card and validation evidence; assess supply-chain and update (PCCP) risk."
+    nist_rmf_subcategory: "GOVERN 6.1"
+
+  # Generative-AI-specific mitigations (NIST AI 600-1).
+  - id: gen_hallucination_controls
+    when:
+      responses:
+        gen.grounding: "no"
+    mitigation: "Ground generated claims in retrieved sources and run an output auditor for unsupported claims and citation validity."
+    nist_rmf_subcategory: "MEASURE 2.3 (GAI)"
+
+  - id: gen_phi_leakage
+    when:
+      responses:
+        gen.phi_leakage: "yes"
+    mitigation: "Add PHI-leakage detection to generated outputs and test against prompt-injection exfiltration."
+    nist_rmf_subcategory: "MAP 4.1 (GAI)"
