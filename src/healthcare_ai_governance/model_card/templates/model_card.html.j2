@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Model Card: {{ card.model_name }}</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 1.7cm 1.4cm 2.2cm 1.4cm;
+    @bottom-left { content: "{{ classification }}"; font-size: 7.5pt; color: #777; }
+    @bottom-center { content: "{{ generation_date }} · {{ short_hash }}"; font-size: 7.5pt; color: #777; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 7.5pt; color: #777; }
+  }
+  body { font-family: "DejaVu Sans", Helvetica, Arial, sans-serif; font-size: 10.5pt;
+         color: #1a1a1a; line-height: 1.45; }
+  h1 { font-size: 19pt; margin: 0 0 2px 0; color: #0b3d63; }
+  h2 { font-size: 13pt; margin: 18px 0 6px 0; color: #0b3d63;
+       border-bottom: 1px solid #d0d7de; padding-bottom: 3px; }
+  h3 { font-size: 11pt; margin: 12px 0 4px 0; }
+  .banner { background: #f0f4f8; border: 1px solid #d0d7de; border-radius: 4px;
+            padding: 8px 12px; font-size: 9pt; color: #444; margin: 8px 0 14px 0; }
+  .banner .label { font-weight: bold; color: #0b3d63; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #d0d7de; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #f6f8fa; }
+  ul { margin: 4px 0 10px 0; padding-left: 20px; }
+  .muted { color: #666; font-size: 8.5pt; }
+  .field-label { font-weight: bold; }
+  .footer-hash { margin-top: 18px; border-top: 1px solid #d0d7de; padding-top: 6px; }
+</style>
+</head>
+<body>
+{% macro kv_table(rows) %}
+<table>
+  {% for k, v in rows %}
+  <tr><th style="width: 32%;">{{ k }}</th><td>{{ v }}</td></tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+{% macro metric_table(d) %}
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  {% for name, value in d.items() %}
+  <tr><td>{{ name }}</td><td>{{ "%.4g"|format(value) }}</td></tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+<h1>Model Card: {{ card.model_name }}</h1>
+<div class="banner">
+  <span class="label">{{ classification }}</span> &nbsp;·&nbsp;
+  Version {{ card.version }} &nbsp;·&nbsp; Generated {{ generation_date }}
+  &nbsp;·&nbsp; Content hash <code>{{ short_hash }}</code>
+</div>
+
+<h2>Details</h2>
+{{ kv_table([
+  ("Model name", card.model_name),
+  ("Version", card.version),
+  ("Model type", card.model_type),
+  ("Developer", card.developer),
+  ("Contact", card.contact),
+  ("Last updated", card.last_updated),
+  ("FDA regulatory status", card.fda_regulatory_status),
+  ("HIPAA data classification", card.hipaa_data_classification),
+]) }}
+
+<h2>Purpose</h2>
+<p>{{ card.purpose }}</p>
+<p><span class="field-label">Clinical decision supported:</span> {{ card.clinical_decision_supported }}</p>
+
+<h2>Intended use</h2>
+<h3>Primary use cases</h3>
+<ul>{% for use in card.primary_use_cases %}<li>{{ use }}</li>{% endfor %}</ul>
+<h3>Primary users</h3>
+<ul>{% for user in card.primary_users %}<li>{{ user }}</li>{% endfor %}</ul>
+<h3>Intended care setting</h3>
+<ul>{% for setting in card.intended_care_setting %}<li>{{ setting }}</li>{% endfor %}</ul>
+<p><span class="field-label">Target patient population:</span> {{ card.target_patient_population }}</p>
+<p><span class="field-label">Clinical workflow integration:</span> {{ card.clinical_workflow_integration }}</p>
+
+<h2>Out-of-scope and cautioned uses</h2>
+<p>{{ card.cautioned_out_of_scope_use }}</p>
+<ul>{% for use in card.out_of_scope_uses %}<li>{{ use }}</li>{% endfor %}</ul>
+
+<h2>Inputs and outputs</h2>
+<p>{{ card.details_and_output }}</p>
+<h3>Inputs used</h3>
+<ul>{% for inp in card.inputs_used %}<li>{{ inp }}</li>{% endfor %}</ul>
+<p><span class="field-label">Output used:</span> {{ card.output_used }}</p>
+
+<h2>Development data</h2>
+<p>{{ card.development_dataset_description }}</p>
+<h3>Development dataset demographics</h3>
+<table>
+  <tr><th>Group</th><th>Description</th></tr>
+  {% for group, desc in card.development_dataset_demographics.items() %}
+  <tr><td>{{ group }}</td><td>{{ desc }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Validation and quantitative performance</h2>
+<p><span class="field-label">External validation process:</span> {{ card.external_validation_process }}</p>
+<p><span class="field-label">Evaluation method:</span> {{ card.evaluation_method }}</p>
+<h3>Quantitative measures of performance</h3>
+{{ metric_table(card.quantitative_measures_of_performance) }}
+<h3>Performance metrics</h3>
+{{ metric_table(card.performance_metrics) }}
+
+<h2>Performance by subgroup (fairness)</h2>
+{% for subgroup, metrics in card.performance_by_subgroup.items() %}
+<h3>{{ subgroup }}</h3>
+{{ metric_table(metrics) }}
+{% endfor %}
+<p><span class="field-label">Fairness considerations:</span> {{ card.fairness_considerations }}</p>
+
+<h2>Limitations, safety, and operations</h2>
+<h3>Known limitations</h3>
+<ul>{% for limitation in card.known_limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>
+<p><span class="field-label">Safety considerations:</span> {{ card.safety_considerations }}</p>
+<p><span class="field-label">Monitoring plan:</span> {{ card.monitoring_plan }}</p>
+<p><span class="field-label">Retirement criteria:</span> {{ card.retirement_criteria }}</p>
+<p><span class="field-label">Incident contacts:</span> {{ card.incident_contacts }}</p>
+
+<div class="footer-hash muted">
+  Generated by healthcare-ai-governance. Full content hash:
+  <code>{{ doc_hash }}</code>
+</div>
+</body>
+</html>

@@ -1,73 +1,34 @@
-"""Shared pytest fixtures."""
+"""Regenerate demo artifacts from code (.spec §4 scripts, §6.2).
+
+Currently renders model cards for the demo systems that have one. Extended in
+later milestones to also (re)produce risk assessments, fairness reports, and
+audit reports. Outputs land in ``artifacts/`` (which is gitignored).
+
+Usage:
+    python scripts/regenerate_demo_artifacts.py
+    python scripts/regenerate_demo_artifacts.py --formats markdown html
+"""
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+import argparse
+import sys
+from datetime import date
 from pathlib import Path
 
-import pytest
-import yaml
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from healthcare_ai_governance.inventory.schema import AISystem
+from healthcare_ai_governance.model_card.generator import (  # noqa: E402
+    generate_model_card,
+)
+from healthcare_ai_governance.model_card.schema import ModelCard  # noqa: E402
+from healthcare_ai_governance.shared.pdf import pdf_available  # noqa: E402
 
-
-def _system_dict(**overrides: object) -> dict[str, object]:
-    base: dict[str, object] = {
-        "id": "demo-system",
-        "name": "Demo System",
-        "description": "A system for tests.",
-        "owner": "Owner Name",
-        "technical_owner": "Tech Owner",
-        "risk_tier": "medium",
-        "lifecycle_stage": "production",
-        "system_type": "predictive",
-    }
-    base.update(overrides)
-    return base
+REPO_ROOT = Path(__file__).resolve().parent.parent
+MODEL_CARDS_DIR = REPO_ROOT / "artifacts" / "model_cards"
 
 
-@pytest.fixture
-def system_factory():
-    """Return a callable producing valid ``AISystem`` instances with overrides."""
-
-    def _make(**overrides: object) -> AISystem:
-        return AISystem.model_validate(_system_dict(**overrides))
-
-    return _make
-
-
-@pytest.fixture
-def inventory_dir(tmp_path: Path) -> Path:
-    """A temp inventory dir with an organization.yaml and a systems/ subdir."""
-    (tmp_path / "systems").mkdir()
-    org = {
-        "name": "Test Health",
-        "type": "integrated health system",
-        "governance_committee": "AI Governance Committee",
-        "ai_program_lead": "Dr. Lead",
-    }
-    (tmp_path / "organization.yaml").write_text(yaml.safe_dump(org), encoding="utf-8")
-    return tmp_path
-
-
-@pytest.fixture
-def write_system(inventory_dir: Path):
-    """Write a system dict to the temp inventory and return the inventory dir."""
-
-    def _write(**overrides: object) -> Path:
-        data = _system_dict(**overrides)
-        path = inventory_dir / "systems" / f"{data['id']}.yaml"
-        path.write_text(yaml.safe_dump(data), encoding="utf-8")
-        return inventory_dir
-
-    return _write
-
-
-@pytest.fixture
-def sample_model_card():
-    """A deterministic, fully-populated ModelCard for generator tests."""
-    from healthcare_ai_governance.model_card.schema import ModelCard
-
+def _readmission_card() -> ModelCard:
     return ModelCard(
         model_name="30-Day Readmission Risk",
         version="1.2",
@@ -90,7 +51,7 @@ def sample_model_card():
         inputs_used=["Age", "Prior admissions", "Comorbidity flags", "Primary insurance"],
         output_used="Calibrated probability of 30-day all-cause readmission",
         quantitative_measures_of_performance={"auroc": 0.726, "auprc": 0.341},
-        development_dataset_description="5,000 synthetic patients (Synthea).",
+        development_dataset_description="5,000 synthetic patients generated with Synthea.",
         development_dataset_demographics={"age": "18-89", "sex": "51% F / 49% M"},
         external_validation_process="Held-out temporal split; recalibrated quarterly.",
         performance_metrics={"auroc": 0.726, "brier": 0.118},
@@ -98,7 +59,7 @@ def sample_model_card():
             "race:Black": {"auroc": 0.701},
             "race:White": {"auroc": 0.733},
         },
-        evaluation_method="5-fold cross-validation with bootstrap CIs.",
+        evaluation_method="5-fold cross-validation with bootstrap confidence intervals.",
         known_limitations=["Synthetic training data; not validated on real patients."],
         fairness_considerations="AUROC gap across race slices monitored; see fairness report.",
         safety_considerations="Advisory only; never auto-actions care.",
@@ -108,14 +69,29 @@ def sample_model_card():
     )
 
 
-@pytest.fixture
-def today() -> date:
-    return date(2026, 6, 5)
+_DEMO_CARDS = {"readmission-risk": _readmission_card}
 
 
-@pytest.fixture
-def days_ago(today: date):
-    def _days_ago(n: int) -> date:
-        return today - timedelta(days=n)
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Regenerate demo artifacts.")
+    parser.add_argument(
+        "--formats",
+        nargs="+",
+        default=["markdown", "html"] + (["pdf"] if pdf_available() else []),
+        help="Formats to render (markdown html pdf).",
+    )
+    args = parser.parse_args()
 
-    return _days_ago
+    if "pdf" in args.formats and not pdf_available():
+        print("WeasyPrint unavailable; skipping PDF. (Run in Docker for PDF output.)")
+        args.formats = [f for f in args.formats if f != "pdf"]
+
+    for system_id, builder in _DEMO_CARDS.items():
+        written = generate_model_card(builder(), MODEL_CARDS_DIR, args.formats)
+        for fmt, path in written.items():
+            print(f"[{system_id}] {fmt}: {path.relative_to(REPO_ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
