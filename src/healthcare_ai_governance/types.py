@@ -36,6 +36,14 @@ Severity = Literal["negligible", "minor", "moderate", "major", "catastrophic"]
 DisparitySeverity = Literal["informational", "warning", "critical"]
 FindingSeverity = Literal["info", "warning", "error", "critical"]
 
+# Ordering for audit-finding severities (used by the CI fail-on gate).
+FINDING_SEVERITY_ORDER: dict[FindingSeverity, int] = {
+    "info": 0,
+    "warning": 1,
+    "error": 2,
+    "critical": 3,
+}
+
 # Canonical ordering for tier comparisons (used by risk scoring, queries, UI).
 RISK_TIER_ORDER: dict[RiskTier, int] = {
     "low": 0,

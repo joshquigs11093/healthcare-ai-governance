@@ -22,10 +22,14 @@ from healthcare_ai_governance.model_card.generator import (  # noqa: E402
     generate_model_card,
 )
 from healthcare_ai_governance.model_card.schema import ModelCard  # noqa: E402
+from healthcare_ai_governance.output_auditor.auditor import OutputAuditor  # noqa: E402
+from healthcare_ai_governance.output_auditor.schema import LLMOutput  # noqa: E402
 from healthcare_ai_governance.shared.pdf import pdf_available  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MODEL_CARDS_DIR = REPO_ROOT / "artifacts" / "model_cards"
+AUDIT_DIR = REPO_ROOT / "artifacts" / "audit_reports"
+DATA_DIR = REPO_ROOT / "data"
 
 
 def _readmission_card() -> ModelCard:
@@ -90,7 +94,29 @@ def main() -> int:
         written = generate_model_card(builder(), MODEL_CARDS_DIR, args.formats)
         for fmt, path in written.items():
             print(f"[{system_id}] {fmt}: {path.relative_to(REPO_ROOT)}")
+
+    _generate_demo_audit()
     return 0
+
+
+def _generate_demo_audit() -> None:
+    """Run the output auditor on the sample outputs (all five checks active)."""
+    config_path = DATA_DIR / "audit_config.yaml"
+    outputs_path = DATA_DIR / "sample_audit_outputs.jsonl"
+    if not (config_path.is_file() and outputs_path.is_file()):
+        return
+    auditor = OutputAuditor.from_config_file(config_path)
+    outputs = [
+        LLMOutput.model_validate_json(line)
+        for line in outputs_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = auditor.audit(outputs)
+    AUDIT_DIR.mkdir(parents=True, exist_ok=True)
+    out = AUDIT_DIR / "guideline-gpt-2026-03.json"
+    out.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+    n_findings = sum(len(v) for v in report.findings.values())
+    print(f"[guideline-gpt] audit: {out.relative_to(REPO_ROOT)} ({n_findings} findings)")
 
 
 if __name__ == "__main__":

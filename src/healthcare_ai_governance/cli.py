@@ -13,6 +13,7 @@ import typer
 from healthcare_ai_governance import __version__
 from healthcare_ai_governance.inventory.cli import app as inventory_app
 from healthcare_ai_governance.model_card.cli import app as model_card_app
+from healthcare_ai_governance.output_auditor.cli import app as audit_app
 from healthcare_ai_governance.risk_assessment.cli import app as risk_assessment_app
 
 app = typer.Typer(
@@ -24,6 +25,7 @@ app = typer.Typer(
 app.add_typer(inventory_app, name="inventory")
 app.add_typer(model_card_app, name="model-card")
 app.add_typer(risk_assessment_app, name="risk-assessment")
+app.add_typer(audit_app, name="audit")
 
 
 @app.command()
