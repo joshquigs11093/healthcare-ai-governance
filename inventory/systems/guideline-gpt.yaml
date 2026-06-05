@@ -1,0 +1,28 @@
+id: guideline-gpt
+name: guideline-gpt RAG Assistant
+description: Retrieval-augmented assistant that answers clinician questions by citing
+  approved clinical guidelines. Informational only; not decision support.
+owner: Dr. Marcus Hale, Chief Medical Information Officer
+technical_owner: Devin Park, Applied AI Engineer
+risk_tier: medium
+lifecycle_stage: validation
+system_type: generative
+deployed_date: null
+last_review: '2026-03-10'
+next_review_due: '2026-09-10'
+fda_samd_class: not_applicable
+fda_pccp_in_place: false
+integrates_with_ehr: false
+affects_clinical_decision: false
+affects_patient_population:
+- clinicians (indirect)
+is_generative: true
+linked_artifacts:
+  model_card: artifacts/model_cards/guideline-gpt-rag-assistant.md
+  risk_assessment: artifacts/risk_assessments/guideline-gpt-2026-03.pdf
+  fairness_report: null
+  audit_reports:
+  - artifacts/audit_reports/guideline-gpt-2026-03.json
+  monitoring_dashboard_url: null
+  runbook_url: null
+notes: Generative — GenAI Profile questions activate in risk assessment.

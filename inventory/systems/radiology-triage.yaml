@@ -1,0 +1,28 @@
+id: radiology-triage
+name: Radiology Triage Prioritizer
+description: Reprioritizes the radiology worklist by flagging studies with suspected
+  acute findings for earlier read. FDA-cleared SaMD Class II with a PCCP.
+owner: Dr. Anita Rao, Chair of Radiology
+technical_owner: Vendor-supplied (Acme Imaging AI), integration by IT
+risk_tier: high
+lifecycle_stage: validation
+system_type: predictive
+deployed_date: null
+last_review: '2026-01-20'
+next_review_due: '2026-07-20'
+fda_samd_class: II
+fda_pccp_in_place: true
+integrates_with_ehr: true
+affects_clinical_decision: true
+affects_patient_population:
+- emergency department imaging
+- inpatient CT
+is_generative: false
+linked_artifacts:
+  model_card: artifacts/model_cards/radiology-triage-prioritizer.md
+  risk_assessment: null
+  fairness_report: null
+  audit_reports: []
+  monitoring_dashboard_url: null
+  runbook_url: null
+notes: Intentionally lacks a risk assessment to demonstrate the compliance gap.

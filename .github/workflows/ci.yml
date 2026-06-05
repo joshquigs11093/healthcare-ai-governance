@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install project
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check src tests
+
+      - name: Ruff format check
+        run: ruff format --check src tests
+
+      - name: Mypy (strict)
+        run: mypy src
+
+      - name: Pytest + coverage
+        run: pytest --cov=healthcare_ai_governance --cov-report=term-missing --cov-fail-under=80
+
+      - name: Validate committed inventory
+        run: hag inventory validate
+
+      - name: Seed script dry-run
+        run: python scripts/seed_demo_data.py --dry-run

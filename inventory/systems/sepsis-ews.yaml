@@ -1,0 +1,29 @@
+id: sepsis-ews
+name: Sepsis Early Warning System v2
+description: Continuously scores inpatients for risk of sepsis using vitals, labs,
+  and nursing assessments, surfacing alerts to the rapid response team.
+owner: Dr. Marcus Hale, Chief Medical Information Officer
+technical_owner: Sarah Okonkwo, ML Engineering Lead
+risk_tier: high
+lifecycle_stage: production
+system_type: predictive
+deployed_date: '2024-08-12'
+last_review: '2025-04-15'
+next_review_due: '2026-04-15'
+fda_samd_class: not_applicable
+fda_pccp_in_place: false
+integrates_with_ehr: true
+affects_clinical_decision: true
+affects_patient_population:
+- adult inpatients
+- ICU
+- medical-surgical units
+is_generative: false
+linked_artifacts:
+  model_card: artifacts/model_cards/sepsis-early-warning-system-v2.md
+  risk_assessment: artifacts/risk_assessments/sepsis-ews-2025-04.pdf
+  fairness_report: null
+  audit_reports: []
+  monitoring_dashboard_url: https://monitoring.example.org/sepsis-ews
+  runbook_url: null
+notes: Review overdue; alert-fatigue recalibration pending.

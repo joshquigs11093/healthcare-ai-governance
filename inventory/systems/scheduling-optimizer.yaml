@@ -1,0 +1,27 @@
+id: scheduling-optimizer
+name: Scheduling Optimizer
+description: Optimizes OR and clinic scheduling to reduce idle time and patient wait.
+  Non-clinical, operational example.
+owner: Robert Chen, VP Operations
+technical_owner: Maya Gupta, Operations Analytics
+risk_tier: low
+lifecycle_stage: production
+system_type: operational
+deployed_date: '2024-11-05'
+last_review: '2025-02-15'
+next_review_due: '2026-03-01'
+fda_samd_class: not_applicable
+fda_pccp_in_place: false
+integrates_with_ehr: false
+affects_clinical_decision: false
+affects_patient_population:
+- surgical and clinic patients (scheduling only)
+is_generative: false
+linked_artifacts:
+  model_card: null
+  risk_assessment: artifacts/risk_assessments/scheduling-optimizer-2025-02.pdf
+  fairness_report: null
+  audit_reports: []
+  monitoring_dashboard_url: null
+  runbook_url: null
+notes: Review overdue; low-risk non-clinical example.

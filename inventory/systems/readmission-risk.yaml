@@ -1,0 +1,27 @@
+id: readmission-risk
+name: 30-Day Readmission Risk
+description: Predicts 30-day all-cause readmission at discharge to target care-management
+  resources. Subject of the fairness evaluator demo.
+owner: Dr. Lena Fischer, VP Population Health
+technical_owner: Sarah Okonkwo, ML Engineering Lead
+risk_tier: medium
+lifecycle_stage: production
+system_type: predictive
+deployed_date: '2025-03-01'
+last_review: '2026-02-01'
+next_review_due: '2027-02-01'
+fda_samd_class: not_applicable
+fda_pccp_in_place: false
+integrates_with_ehr: true
+affects_clinical_decision: true
+affects_patient_population:
+- adult inpatients at discharge
+is_generative: false
+linked_artifacts:
+  model_card: artifacts/model_cards/30-day-readmission-risk.md
+  risk_assessment: artifacts/risk_assessments/readmission-risk-2026-02.pdf
+  fairness_report: artifacts/fairness_reports/readmission-risk-2026-01.html
+  audit_reports: []
+  monitoring_dashboard_url: null
+  runbook_url: null
+notes: Logistic regression chosen for transparency.

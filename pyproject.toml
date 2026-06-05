@@ -1,0 +1,98 @@
+[project]
+name = "healthcare-ai-governance"
+version = "0.1.0"
+description = "Reference implementation of governance tooling for healthcare AI programs."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "DataCare Solutions" }]
+
+dependencies = [
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "typer>=0.12",
+    "rich>=13.7",
+    "structlog>=24.1",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "plotly>=5.20",
+]
+
+[project.optional-dependencies]
+# Heavy / platform-sensitive deps are grouped so the core (inventory + CLI)
+# installs cleanly everywhere. See .spec §3 technology stack.
+pdf = ["weasyprint>=61.0"]
+dashboard = ["streamlit>=1.33", "pandas>=2.2"]
+fairness = ["fairlearn>=0.10", "scikit-learn>=1.4", "numpy>=1.26", "pandas>=2.2"]
+audit = ["presidio-analyzer>=2.2", "presidio-anonymizer>=2.2"]
+llm = ["anthropic>=0.40", "openai>=1.30"]
+all = [
+    "healthcare-ai-governance[pdf,dashboard,fairness,audit,llm]",
+]
+dev = [
+    "healthcare-ai-governance[all]",
+    "pytest>=8.1",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+hag = "healthcare_ai_governance.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/healthcare_ai_governance"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+ignore = ["B008"]  # Typer uses function calls in argument defaults
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# Optional/native deps without stubs — don't fail strict mode on imports.
+module = [
+    "weasyprint.*",
+    "streamlit.*",
+    "plotly.*",
+    "fairlearn.*",
+    "sklearn.*",
+    "presidio_analyzer.*",
+    "presidio_anonymizer.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["healthcare_ai_governance"]
+# Coverage target is 80% on non-UI code (.spec §9). The Streamlit UI is
+# integration-tested manually; exclude it from the line-coverage gate.
+omit = [
+    "src/healthcare_ai_governance/ui/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
