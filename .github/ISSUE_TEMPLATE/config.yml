@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security or PHI-exposure report
+    url: https://github.com/joshquigs11093/healthcare-ai-governance/security/advisories/new
+    about: Report vulnerabilities or exposed data privately — do not open a public issue.
+  - name: Question / usage help
+    url: https://github.com/joshquigs11093/healthcare-ai-governance/blob/main/PRACTITIONERS.md
+    about: See the practitioners guide for installation and CLI usage.

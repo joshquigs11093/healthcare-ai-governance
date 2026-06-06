@@ -1,5 +1,11 @@
 # healthcare-ai-governance
 
+[![CI](https://github.com/joshquigs11093/healthcare-ai-governance/actions/workflows/ci.yml/badge.svg)](https://github.com/joshquigs11093/healthcare-ai-governance/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Code style: ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
+[![Checked with mypy](https://img.shields.io/badge/types-mypy_strict-blue.svg)](https://mypy-lang.org/)
+
 **Governance tooling for healthcare AI programs.** It produces the artifacts a
 compliance officer, AI governance committee, or hospital board needs to review an
 AI portfolio: a risk-classified system inventory, model cards, NIST AI RMF–mapped
