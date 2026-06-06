@@ -6,16 +6,16 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-- Project governance and community files: `LICENSE` (Apache-2.0), `NOTICE`,
-  `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue/PR templates, and
-  README status badges.
+_Nothing yet._
 
 ## [0.1.0] - 2026-06-06
 
 Initial reference implementation.
 
 ### Added
+- Project governance and community files: `LICENSE` (Apache-2.0), `NOTICE`,
+  `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue/PR templates, and
+  README status badges.
 - **Inventory** — YAML-in-git system registry with Pydantic validation, pure
   query functions, and the `hag inventory` CLI; six-system Mountain Region Health
   demo with an idempotent seed script.
