@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an improvement or new capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a reference implementation. Proposals should keep it accurate and
+        honest — it should not imply regulatory compliance or capabilities it does
+        not have.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What governance need or gap would this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you'd like to see. Reference any framework (NIST AI RMF, HTI-1, FDA) it supports.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Confirmation
+      options:
+        - label: This does not require committing real PHI or proprietary data.
+          required: true

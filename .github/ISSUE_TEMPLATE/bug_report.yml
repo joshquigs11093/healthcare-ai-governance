@@ -1,0 +1,58 @@
+name: Bug report
+description: Report a problem with the toolkit
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Do not include real PHI or secrets.** For
+        security or PHI-exposure issues, use the [Security Policy](../blob/main/SECURITY.md)
+        instead of a public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `hag ...`
+        2. ...
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - inventory
+        - model card
+        - risk assessment
+        - fairness evaluator
+        - output auditor
+        - dashboard / board report
+        - CLI / packaging / CI
+        - docs
+        - other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: e.g. 0.1.0 or commit sha
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, Python version, Docker vs local, relevant extras installed.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / traceback
+      render: shell
