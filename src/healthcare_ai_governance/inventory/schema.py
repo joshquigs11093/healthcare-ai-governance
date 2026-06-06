@@ -15,7 +15,12 @@ from healthcare_ai_governance.types import (
 
 
 class LinkedArtifacts(BaseModel):
-    """Relative paths (from repo root) to the artifacts produced for a system."""
+    """Relative paths (from repo root) to the **per-system** artifacts.
+
+    Board reports are intentionally absent: they are portfolio-level (not tied to
+    a single system) and are written to ``artifacts/board_reports/`` by the board
+    report generator (.spec §6.6), not linked from individual inventory records.
+    """
 
     model_card: str | None = None
     risk_assessment: str | None = None
